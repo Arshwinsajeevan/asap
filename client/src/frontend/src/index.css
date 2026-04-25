@@ -1,0 +1,54 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  :root {
+    --background: #F8FAFB;
+    --foreground: #0F172A;
+    --primary: #00B4D8;
+    --primary-dark: #007A96;
+    --accent: #FF6900;
+    --border: #E2E8F0;
+  }
+
+  body {
+    @apply bg-background text-text antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-[#0096B7] text-white rounded-[8px] transition-all duration-300 font-semibold;
+    @apply hover:bg-[#007A96] active:scale-95;
+  }
+
+  .btn-accent {
+    @apply px-4 py-2 bg-[#FF6900] text-white rounded-[8px] transition-all duration-300 font-semibold;
+    @apply hover:bg-[#E65F00] active:scale-95 shadow-lg shadow-accent/20;
+  }
+
+  .card-premium {
+    @apply bg-white rounded-[12px] border border-[#F1F5F9] p-6 transition-all duration-300;
+    @apply hover:shadow-[0_10px_25px_rgba(0,0,0,0.1)] hover:-translate-y-[2px];
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 bg-white border border-[#CBD5E1] rounded-[8px] transition-all duration-300 outline-none;
+    @apply focus:border-[#00B4D8] focus:ring-[3px] focus:ring-[#00B4D8]/10;
+  }
+
+  .page-transition {
+    @apply animate-fade-in;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-200 rounded-full hover:bg-primary/30 transition-colors;
+  }
+}
