@@ -19,7 +19,8 @@ import {
   GraduationCap,
   ShieldCheck,
   UserCheck,
-  Calendar
+  Calendar,
+  ShieldAlert
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -84,16 +85,18 @@ const Sidebar = ({ status = 'active', isAdmin = false, user }) => {
     {
       category: 'LMS Control',
       items: [
-        { title: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/lms-dashboard' },
+        { title: 'Overview', icon: <LayoutDashboard size={20} />, path: '/lms-dashboard' },
         { title: 'Programs', icon: <BookOpen size={20} />, path: '/lms-dashboard/programs' },
-        { title: 'Trainers', icon: <Users size={20} />, path: '/lms-dashboard/trainers' },
+        { title: 'Batches', icon: <BarChart3 size={20} />, path: '/lms-dashboard/batches' },
+        { title: 'Faculty', icon: <Users size={20} />, path: '/lms-dashboard/faculty' },
       ]
     },
     {
-      category: 'Academic Ops',
+      category: 'Intelligence & Governance',
       items: [
-        { title: 'Sessions', icon: <Video size={20} />, path: '/lms-dashboard/sessions' },
-        { title: 'Reports', icon: <BarChart3 size={20} />, path: '/lms-dashboard/reports' },
+        { title: 'Intelligence', icon: <BarChart3 size={20} />, path: '/lms-dashboard/intelligence' },
+        { title: 'Governance', icon: <ShieldAlert size={20} />, path: '/lms-dashboard/governance' },
+        { title: 'Calendar', icon: <Calendar size={20} />, path: '/lms-dashboard/calendar' },
       ]
     }
   ];
@@ -168,6 +171,7 @@ const Sidebar = ({ status = 'active', isAdmin = false, user }) => {
   ];
 
   const getNavigation = () => {
+    if (user?.role === 'ADMIN' && location.pathname.includes('/lms-dashboard')) return lmsAdminNav;
     if (isAdmin && user?.category === 'ALL') return adminNav;
     if (user?.role === 'ADMIN' && user?.category === 'LMS') return lmsAdminNav;
     if (user?.role === 'ADMIN') return adminNav; // Other category admins
