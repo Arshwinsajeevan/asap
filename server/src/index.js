@@ -25,6 +25,7 @@ const tbbRoutes = require('./routes/tbbRoutes');
 const authRoutes = require('./routes/authRoutes');
 const partnerRoutes = require('./routes/partnerRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const lmsRoutes = require('./routes/lmsRoutes');
 
 
 // Vertical Specific Routes
@@ -33,6 +34,7 @@ app.use('/api/training', trainingRoutes);
 app.use('/api/tbb', tbbRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/lms', lmsRoutes);
 app.use('/api/frr', (req, res) => res.json({ message: 'FRR API Ready' }));
 
 app.listen(PORT, () => {

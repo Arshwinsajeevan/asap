@@ -1,5 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import QuickActionsPanel from '../components/QuickActionsPanel';
 import { 
   Users, 
   Video, 
@@ -12,7 +14,45 @@ import {
   UserCheck
 } from 'lucide-react';
 
-const TrainerDashboard = () => {
+const TrainerDashboard = ({ user }) => {
+  const navigate = useNavigate();
+  const [stats, setStats] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/lms/dashboard/stats?userId=${user?.id}&role=${user?.role}`);
+        const data = await res.json();
+        if (data.success) setStats(data.stats);
+      } catch (err) {
+        console.error('Failed to fetch stats');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, [user]);
+
+  const getIcon = (label) => {
+    switch (label) {
+      case 'Sessions Today': return <Video size={24} />;
+      case 'Total Trainees': return <Users size={24} />;
+      case 'Avg Attendance': return <UserCheck size={24} />;
+      case 'Pending Evaluations': return <FileCheck size={24} />;
+      default: return <TrendingUp size={24} />;
+    }
+  };
+
+  const getAction = (label) => {
+    switch (label) {
+      case 'Sessions Today': return () => navigate('/lms-dashboard/schedule');
+      case 'Total Trainees': return () => navigate('/lms-dashboard/batches');
+      case 'Pending Evaluations': return () => navigate('/lms-dashboard/assessments');
+      default: return null;
+    }
+  };
+
   const schedule = [
     { time: '10:00 AM', topic: 'React Advanced Patterns', batch: 'B1-PY-002', type: 'ONLINE' },
     { time: '02:00 PM', topic: 'State Management (Redux)', batch: 'B2-JS-015', type: 'HYBRID' },
@@ -28,11 +68,31 @@ const TrainerDashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <StatCard icon={<Users size={24} />} label="Total Students" value="156" trend="+12 this week" color="text-blue-600" bg="bg-blue-50" />
-        <StatCard icon={<Video size={24} />} label="Sessions Today" value="03" trend="Next in 45 mins" color="text-indigo-600" bg="bg-indigo-50" />
-        <StatCard icon={<UserCheck size={24} />} label="Avg Attendance" value="88%" trend="Across all batches" color="text-emerald-600" bg="bg-emerald-50" />
-        <StatCard icon={<TrendingUp size={24} />} label="Pass Rate" value="94%" trend="Project Milestones" color="text-amber-600" bg="bg-amber-50" />
+        {loading ? (
+          [1, 2, 3, 4].map(i => <div key={i} className="h-48 bg-white rounded-[2.5rem] animate-pulse" />)
+        ) : (
+          stats.map((stat, i) => (
+            <StatCard 
+              key={i}
+              icon={getIcon(stat.label)} 
+              label={stat.label} 
+              value={stat.value} 
+              trend={stat.trend} 
+              color={stat.color}
+              bg={stat.bg}
+              onClick={getAction(stat.label)}
+            />
+          ))
+        )}
       </div>
+
+      <QuickActionsPanel 
+        actions={[
+          { label: 'Start Session', icon: <Video size={18} />, onClick: () => navigate('/lms-dashboard/schedule') },
+          { label: 'Mark Attendance', icon: <UserCheck size={18} />, onClick: () => navigate('/lms-dashboard/attendance') },
+          { label: 'Add Evaluation', icon: <FileCheck size={18} />, onClick: () => navigate('/lms-dashboard/assessments') },
+        ]}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Today's Schedule */}
@@ -104,18 +164,26 @@ const TrainerDashboard = () => {
   );
 };
 
-const StatCard = ({ icon, label, value, trend, color, bg }) => (
+const StatCard = ({ icon, label, value, trend, color, bg, onClick }) => (
   <motion.div 
-    whileHover={{ y: -5 }}
-    className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/20"
+    whileHover={onClick ? { y: -10, scale: 1.02 } : { y: -5 }}
+    onClick={onClick}
+    className={`bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/20 transition-all ${onClick ? 'cursor-pointer hover:border-primary/30' : ''}`}
   >
-    <div className={`p-4 rounded-2xl ${bg} ${color} w-fit mb-8 border border-white shadow-sm`}>
-       {icon}
+    <div className="flex justify-between items-start mb-8">
+      <div className={`p-4 rounded-2xl ${bg} ${color} border border-white shadow-sm`}>
+         {icon}
+      </div>
+      {onClick && (
+        <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-300 group-hover:text-primary">
+          <ArrowUpRight size={16} />
+        </div>
+      )}
     </div>
     <div className="space-y-1">
        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{label}</p>
        <h3 className="text-4xl font-black text-slate-900 tracking-tighter italic leading-none">{value}</h3>
-       <p className="text-[10px] font-bold text-slate-400 mt-6 uppercase tracking-wider">{trend}</p>
+       <p className="text-[10px] font-bold text-slate-400 mt-6 uppercase tracking-wider italic">{trend}</p>
     </div>
   </motion.div>
 );

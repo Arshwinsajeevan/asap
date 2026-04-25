@@ -1,5 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import QuickActionsPanel from '../components/QuickActionsPanel';
+import FilterIntelligence from '../components/FilterIntelligence';
 import { 
   Zap, 
   Award, 
@@ -10,10 +13,50 @@ import {
   Calendar, 
   ArrowUpRight,
   Target,
-  Trophy
+  Trophy,
+  Video,
+  CheckCircle
 } from 'lucide-react';
 
-const StudentDashboard = () => {
+const StudentDashboard = ({ user }) => {
+  const navigate = useNavigate();
+  const [stats, setStats] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/lms/dashboard/stats?userId=${user?.id}&role=${user?.role}`);
+        const data = await res.json();
+        if (data.success) setStats(data.stats);
+      } catch (err) {
+        console.error('Failed to fetch stats');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, [user]);
+
+  const getIcon = (label) => {
+    switch (label) {
+      case 'Skill Coin Balance': return <Zap size={24} />;
+      case 'Skill Score': return <Target size={24} />;
+      case 'Active Programs': return <BookOpen size={24} />;
+      case 'Attendance Avg': return <Activity size={24} />;
+      default: return <TrendingUp size={24} />;
+    }
+  };
+
+  const getAction = (label) => {
+    switch (label) {
+      case 'Skill Coin Balance': return () => navigate('/lms-dashboard/marketplace');
+      case 'Active Programs': return () => navigate('/lms-dashboard/courses');
+      case 'Attendance Avg': return () => navigate('/lms-dashboard/schedule');
+      default: return null;
+    }
+  };
+
   const myCourses = [
     { title: 'UI/UX Design Mastery', instructor: 'Arjun K.', progress: 75, color: 'bg-indigo-600' },
     { title: 'Cloud Computing Foundation', instructor: 'Sarah J.', progress: 30, color: 'bg-emerald-600' },
@@ -28,40 +71,42 @@ const StudentDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <StatCard 
-          icon={<Zap size={24} />} 
-          label="Skill Coin Balance" 
-          value="1,250" 
-          trend="≈ ₹125.00 INR Value" 
-          color="text-amber-500"
-          bg="bg-amber-50"
-        />
-        <StatCard 
-          icon={<Target size={24} />} 
-          label="Skill Score" 
-          value="840/1000" 
-          trend="TOP 5% OF KERALA" 
-          color="text-emerald-500"
-          bg="bg-emerald-50"
-        />
-        <StatCard 
-          icon={<Activity size={24} />} 
-          label="Attendance Avg" 
-          value="92%" 
-          trend="CERTIFICATE ELIGIBLE" 
-          color="text-blue-500"
-          bg="bg-blue-50"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        {loading ? (
+          [1, 2, 3, 4].map(i => <div key={i} className="h-48 bg-white rounded-[2.5rem] animate-pulse" />)
+        ) : (
+          stats.map((stat, i) => (
+            <StatCard 
+              key={i}
+              icon={getIcon(stat.label)} 
+              label={stat.label} 
+              value={stat.value} 
+              trend={stat.trend} 
+              color={stat.color}
+              bg={stat.bg}
+              onClick={getAction(stat.label)}
+            />
+          ))
+        )}
       </div>
+
+      <QuickActionsPanel 
+        actions={[
+          { label: 'Resume Course', icon: <Play size={18} />, onClick: () => navigate('/lms-dashboard/courses') },
+          { label: 'Join Session', icon: <Video size={18} />, onClick: () => navigate('/lms-dashboard/schedule') },
+          { label: 'View Certificate', icon: <Award size={18} />, onClick: () => navigate('/lms-dashboard/certificates') },
+        ]}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Course Progress */}
         <div className="lg:col-span-2 bg-white rounded-[3rem] border border-slate-200 p-10 shadow-xl shadow-slate-200/20">
-           <div className="flex items-center justify-between mb-10">
+           <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-black text-slate-900 italic uppercase">My Active Courses</h2>
               <BookOpen className="text-slate-300" size={24} />
            </div>
+
+           <FilterIntelligence role="STUDENT" />
 
            <div className="space-y-6">
               {myCourses.map((course, i) => (
@@ -123,18 +168,26 @@ const StudentDashboard = () => {
   );
 };
 
-const StatCard = ({ icon, label, value, trend, color, bg }) => (
+const StatCard = ({ icon, label, value, trend, color, bg, onClick }) => (
   <motion.div 
-    whileHover={{ y: -5 }}
-    className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/20"
+    whileHover={onClick ? { y: -10, scale: 1.02 } : { y: -5 }}
+    onClick={onClick}
+    className={`bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/20 transition-all ${onClick ? 'cursor-pointer hover:border-primary/30' : ''}`}
   >
-    <div className={`p-4 rounded-2xl ${bg} ${color} w-fit mb-8 border border-white`}>
-       {icon}
+    <div className="flex justify-between items-start mb-8">
+      <div className={`p-4 rounded-2xl ${bg} ${color} border border-white shadow-sm`}>
+         {icon}
+      </div>
+      {onClick && (
+        <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-300 group-hover:text-primary">
+          <ArrowUpRight size={16} />
+        </div>
+      )}
     </div>
     <div className="space-y-1">
        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{label}</p>
        <h3 className="text-4xl font-black text-slate-900 tracking-tighter italic leading-none">{value}</h3>
-       <p className="text-[10px] font-bold text-slate-400 mt-6 leading-relaxed uppercase tracking-wider">{trend}</p>
+       <p className="text-[10px] font-bold text-slate-400 mt-6 uppercase tracking-wider italic">{trend}</p>
     </div>
   </motion.div>
 );

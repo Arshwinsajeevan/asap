@@ -1,5 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import QuickActionsPanel from '../components/QuickActionsPanel';
+import FilterIntelligence from '../components/FilterIntelligence';
 import { 
   Briefcase, 
   Users, 
@@ -13,7 +16,33 @@ import {
   Building2
 } from 'lucide-react';
 
-const RecruiterDashboard = () => {
+const RecruiterDashboard = ({ user }) => {
+  const [stats, setStats] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/lms/dashboard/stats?userId=${user?.id}&role=${user?.role}`);
+        const data = await res.json();
+        if (data.success) setStats(data.stats);
+      } catch (err) {
+        console.error('Failed to fetch stats');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, [user]);
+
+  const getIcon = (label) => {
+    switch (label) {
+      case 'Active Candidates': return <Users size={24} />;
+      case 'Talent Matches': return <UserCheck size={24} />;
+      case 'Applications Received': return <Briefcase size={24} />;
+      default: return <TrendingUp size={24} />;
+    }
+  };
   const jobs = [
     { title: 'Frontend Developer Intern', applicants: 124, interviews: 8, status: 'ACTIVE' },
     { title: 'Python Backend Engineer', applicants: 45, interviews: 12, status: 'ACTIVE' },
@@ -29,22 +58,32 @@ const RecruiterDashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <StatCard icon={<Briefcase size={24} />} label="Active Postings" value="12" trend="04 Gigs Posted Today" color="text-blue-600" bg="bg-blue-50" />
-        <StatCard icon={<Users size={24} />} label="Total Applicants" value="568" trend="+12% from last week" color="text-indigo-600" bg="bg-indigo-50" />
-        <StatCard icon={<UserCheck size={24} />} label="Interviews" value="04" trend="Scheduled for today" color="text-emerald-600" bg="bg-emerald-50" />
-        <StatCard icon={<TrendingUp size={24} />} label="Hire Rate" value="82%" trend="Across all verticals" color="text-amber-600" bg="bg-amber-50" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {loading ? (
+          [1, 2, 3].map(i => <div key={i} className="h-48 bg-white rounded-[2.5rem] animate-pulse" />)
+        ) : (
+          stats.map((stat, i) => (
+            <StatCard 
+              key={i}
+              icon={getIcon(stat.label)} 
+              label={stat.label} 
+              value={stat.value} 
+              trend={stat.trend} 
+              color={stat.color}
+              bg={stat.bg}
+            />
+          ))
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Job Postings */}
         <div className="lg:col-span-2 bg-white rounded-[3rem] border border-slate-200 p-10 shadow-xl shadow-slate-200/20">
-           <div className="flex items-center justify-between mb-10">
+           <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-black text-slate-900 italic uppercase">Active Gigs & Openings</h2>
-              <button className="px-8 py-4 bg-primary text-white rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl hover:scale-105 transition-all">
-                 Post New Opening
-              </button>
            </div>
+
+           <FilterIntelligence role="CORPORATE" />
 
            <div className="space-y-4">
               {jobs.map((job, i) => (

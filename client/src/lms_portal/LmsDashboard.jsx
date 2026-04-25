@@ -9,17 +9,17 @@ const LmsDashboard = ({ user }) => {
   const renderDashboard = () => {
     switch (user?.role) {
       case 'ADMIN':
-        return <LmsAdminDashboard />;
+        return <LmsAdminDashboard user={user} />;
       case 'TRAINER':
-        return <TrainerDashboard />;
+        return <TrainerDashboard user={user} />;
       case 'STUDENT':
-        return <StudentDashboard />;
+        return <StudentDashboard user={user} />;
       case 'CORPORATE':
-        return <RecruiterDashboard />;
+        return <RecruiterDashboard user={user} />;
       case 'PLACEMENT_OFFICER':
-        return <PlacementDashboard />;
+        return <PlacementDashboard user={user} />;
       default:
-        return <StudentDashboard />;
+        return <StudentDashboard user={user} />;
     }
   };
 

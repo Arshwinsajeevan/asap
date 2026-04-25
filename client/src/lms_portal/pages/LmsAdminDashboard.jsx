@@ -1,5 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import QuickActionsPanel from '../components/QuickActionsPanel';
+import FilterIntelligence from '../components/FilterIntelligence';
 import { 
   BarChart3, 
   BookOpen, 
@@ -9,10 +12,51 @@ import {
   ArrowUpRight, 
   Database, 
   Layers,
-  GraduationCap
+  GraduationCap,
+  UserCheck,
+  Plus,
+  UserPlus
 } from 'lucide-react';
 
-const LmsAdminDashboard = () => {
+
+
+const LmsAdminDashboard = ({ user }) => {
+  const navigate = useNavigate();
+  const [stats, setStats] = React.useState([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/lms/dashboard/stats?userId=${user?.id}&role=${user?.role}`);
+        const data = await res.json();
+        if (data.success) setStats(data.stats);
+      } catch (err) {
+        console.error('Failed to fetch stats');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, [user]);
+
+  const getIcon = (label) => {
+    switch (label) {
+      case 'Total Programs': return <Layers size={24} />;
+      case 'Active Batches': return <BookOpen size={24} />;
+      case 'Completion Rate': return <GraduationCap size={24} />;
+      case 'Trainer Performance': return <UserCheck size={24} />;
+      default: return <BarChart3 size={24} />;
+    }
+  };
+
+  const getAction = (label) => {
+    switch (label) {
+      case 'Total Programs': return () => navigate('/lms-dashboard/programs');
+      case 'Active Batches': return () => navigate('/lms-dashboard/batches');
+      default: return null;
+    }
+  };
   const programs = [
     { name: 'ASAP Skill Combo', students: 1240, status: 'ACTIVE', revenue: '₹4.2L' },
     { name: 'KASE Integrated', students: 850, status: 'PLANNING', revenue: '₹2.8L' },
@@ -29,21 +73,40 @@ const LmsAdminDashboard = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <StatCard icon={<Layers size={24} />} label="Active Programs" value="24" trend="12,500 Total Seats" color="text-blue-600" bg="bg-blue-50" />
-        <StatCard icon={<GraduationCap size={24} />} label="Total Trainees" value="8.4K" trend="+240 New this week" color="text-indigo-600" bg="bg-indigo-50" />
-        <StatCard icon={<Users size={24} />} label="Empaneled Trainers" value="184" trend="98% Certification Level" color="text-emerald-600" bg="bg-emerald-50" />
-        <StatCard icon={<Database size={24} />} label="Resource Health" value="100%" trend="Cloud Sync Active" color="text-amber-600" bg="bg-amber-50" />
+        {loading ? (
+          [1, 2, 3, 4].map(i => <div key={i} className="h-48 bg-white rounded-[2.5rem] animate-pulse" />)
+        ) : (
+          stats.map((stat, i) => (
+            <StatCard 
+              key={i}
+              icon={getIcon(stat.label)} 
+              label={stat.label} 
+              value={stat.value} 
+              trend={stat.trend} 
+              color={stat.color}
+              bg={stat.bg}
+              onClick={getAction(stat.label)}
+            />
+          ))
+        )}
       </div>
+
+      <QuickActionsPanel 
+        actions={[
+          { label: 'Create Program', icon: <Plus size={18} />, onClick: () => navigate('/lms-dashboard/programs') },
+          { label: 'Add Batch', icon: <Layers size={24} />, onClick: () => navigate('/lms-dashboard/batches') },
+          { label: 'Assign Trainer', icon: <UserPlus size={18} />, onClick: () => navigate('/lms-dashboard/trainers') },
+        ]}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Program Performance */}
         <div className="lg:col-span-2 bg-white rounded-[3rem] border border-slate-200 p-10 shadow-xl shadow-slate-200/20">
-           <div className="flex items-center justify-between mb-10">
+           <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-black text-slate-900 italic uppercase">Training Vertical Performance</h2>
-              <button className="flex items-center gap-2 px-6 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-500 hover:text-primary transition-all font-black text-[10px] uppercase tracking-widest">
-                 Export Report <ArrowUpRight size={14} />
-              </button>
            </div>
+
+           <FilterIntelligence role="ADMIN" />
 
            <div className="space-y-4">
               {programs.map((program, i) => (
@@ -100,13 +163,21 @@ const LmsAdminDashboard = () => {
   );
 };
 
-const StatCard = ({ icon, label, value, trend, color, bg }) => (
+const StatCard = ({ icon, label, value, trend, color, bg, onClick }) => (
   <motion.div 
-    whileHover={{ y: -5 }}
-    className="bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/20"
+    whileHover={onClick ? { y: -10, scale: 1.02 } : { y: -5 }}
+    onClick={onClick}
+    className={`bg-white p-8 rounded-[2.5rem] border border-slate-200 shadow-xl shadow-slate-200/20 transition-all ${onClick ? 'cursor-pointer hover:border-primary/30' : ''}`}
   >
-    <div className={`p-4 rounded-2xl ${bg} ${color} w-fit mb-8 border border-white shadow-sm`}>
-       {icon}
+    <div className="flex justify-between items-start mb-8">
+      <div className={`p-4 rounded-2xl ${bg} ${color} border border-white shadow-sm`}>
+         {icon}
+      </div>
+      {onClick && (
+        <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-300 group-hover:text-primary">
+          <ArrowUpRight size={16} />
+        </div>
+      )}
     </div>
     <div className="space-y-1">
        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{label}</p>

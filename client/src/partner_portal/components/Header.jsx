@@ -1,19 +1,34 @@
 import React, { useState } from 'react';
-import { Search, Bell, UserCircle, LogOut, Mail, Phone, MapPin, Building2, ChevronDown } from 'lucide-react';
+import { Search, Bell, UserCircle, LogOut, Mail, Phone, MapPin, Building2, ChevronDown, BookOpen, Layers, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Header = ({ onLogout, partnerStatus, user }) => {
   const [showProfile, setShowProfile] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const mockData = {
-    'enrolling': { type: 'Applicant' },
-    'audit_round_1': { type: 'Private Centre' },
-    'physical_verification': { type: 'Government Aided' },
-    'active': { type: 'Skill Provider' }
+  const handleSearch = async (e) => {
+    const val = e.target.value;
+    setSearchTerm(val);
+    if (val.length > 1) {
+      setIsSearching(true);
+      try {
+        const res = await fetch(`http://localhost:5000/api/lms/search?query=${val}`);
+        const data = await res.json();
+        setResults(data.results);
+      } catch (err) {
+        console.error('Search failed');
+      } finally {
+        setIsSearching(false);
+      }
+    } else {
+      setResults([]);
+    }
   };
 
   const displayName = user?.email?.split('@')[0] || 'Guest User';
-  const displayRole = user?.role || (mockData[partnerStatus]?.type) || 'Guest';
+  const displayRole = user?.role || 'Guest';
 
   return (
     <header className="h-16 bg-white border-b border-border flex items-center justify-between px-8 sticky top-0 z-50 shadow-sm">
@@ -23,9 +38,58 @@ const Header = ({ onLogout, partnerStatus, user }) => {
         </span>
         <input
           type="text"
-          placeholder="Search for courses, partners, batches..."
+          value={searchTerm}
+          onChange={handleSearch}
+          placeholder="Search for courses, trainers, batches..."
           className="input-field pl-10"
         />
+
+        <AnimatePresence>
+          {searchTerm.length > 1 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              className="absolute top-full left-0 mt-2 w-[120%] bg-white border border-border rounded-2xl shadow-2xl p-4 z-50"
+            >
+              {isSearching ? (
+                <div className="p-8 text-center text-slate-400">
+                   <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+                   <p className="text-[10px] font-black uppercase tracking-widest">Scanning Registry...</p>
+                </div>
+              ) : results.length > 0 ? (
+                <div className="space-y-4 max-h-[400px] overflow-y-auto custom-scrollbar">
+                   {['Program', 'STUDENT', 'TRAINER', 'Batch'].map(cat => {
+                     const catResults = results.filter(r => r.category === cat);
+                     if (catResults.length === 0) return null;
+                     return (
+                       <div key={cat} className="space-y-2">
+                         <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-2">{cat === 'Program' ? 'Academic Programs' : cat === 'STUDENT' ? 'Trainees' : cat === 'TRAINER' ? 'Instructors' : 'Training Batches'}</h4>
+                         <div className="space-y-1">
+                            {catResults.map((res, i) => (
+                              <button key={i} className="w-full flex items-center gap-4 p-3 hover:bg-slate-50 rounded-xl transition-all group text-left">
+                                 <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary border border-slate-100">
+                                    {cat === 'Program' ? <BookOpen size={18} /> : cat === 'Batch' ? <Layers size={18} /> : <Users size={18} />}
+                                 </div>
+                                 <div>
+                                    <p className="text-sm font-bold text-slate-900 group-hover:text-primary transition-colors">{res.name}</p>
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{res.category}</p>
+                                 </div>
+                              </button>
+                            ))}
+                         </div>
+                       </div>
+                     );
+                   })}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-slate-400">
+                   <p className="text-[10px] font-black uppercase tracking-widest">No Intelligence Matches Found</p>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="flex items-center gap-6">
