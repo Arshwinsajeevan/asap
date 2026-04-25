@@ -25,6 +25,7 @@ const PortalHome = ({ onLogin }) => {
     { role: 'FRR Admin', url: 'http://localhost:5173/frr-zone', email: 'frr-admin@asap.com', psw: 'psw', redirects: '/frr-zone', scope: 'FRR/Corporate Context' },
     { role: 'Partner Admin', url: 'http://localhost:5173/partner-zone', email: 'partner1@asap.com', psw: 'psw', redirects: '/partner-zone', scope: 'ATP Institutional View' },
     { role: 'LMS Admin', url: 'http://localhost:5173/lms-dashboard', email: 'lmsadmin@asap.com', psw: 'psw', redirects: '/lms-dashboard', scope: 'Learning & Training Management' },
+    { role: 'Placement Officer', url: 'http://localhost:5173/lms-dashboard', email: 'placement@asap.com', psw: 'psw', redirects: '/lms-dashboard', scope: 'Talent Matching & Careers' },
   ];
 
   const copyToClipboard = (e, text) => {

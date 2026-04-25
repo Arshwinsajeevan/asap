@@ -3,6 +3,7 @@ import LmsAdminDashboard from './pages/LmsAdminDashboard';
 import TrainerDashboard from './pages/TrainerDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import RecruiterDashboard from './pages/RecruiterDashboard';
+import PlacementDashboard from './pages/PlacementDashboard';
 
 const LmsDashboard = ({ user }) => {
   const renderDashboard = () => {
@@ -15,6 +16,8 @@ const LmsDashboard = ({ user }) => {
         return <StudentDashboard />;
       case 'CORPORATE':
         return <RecruiterDashboard />;
+      case 'PLACEMENT_OFFICER':
+        return <PlacementDashboard />;
       default:
         return <StudentDashboard />;
     }

@@ -18,7 +18,8 @@ import {
   HandCoins,
   GraduationCap,
   ShieldCheck,
-  UserCheck
+  UserCheck,
+  Calendar
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -149,6 +150,23 @@ const Sidebar = ({ status = 'active', isAdmin = false, user }) => {
     }
   ];
 
+  const placementNav = [
+    {
+      category: 'Placement Ops',
+      items: [
+        { title: 'Intelligence', icon: <LayoutDashboard size={20} />, path: '/lms-dashboard' },
+        { title: 'Talent Pool', icon: <Users size={20} />, path: '/lms-dashboard/pool' },
+      ]
+    },
+    {
+      category: 'External',
+      items: [
+        { title: 'Companies', icon: <Building2 size={20} />, path: '/lms-dashboard/companies' },
+        { title: 'Drives', icon: <Calendar size={20} />, path: '/lms-dashboard/drives' },
+      ]
+    }
+  ];
+
   const getNavigation = () => {
     if (isAdmin && user?.category === 'ALL') return adminNav;
     if (user?.role === 'ADMIN' && user?.category === 'LMS') return lmsAdminNav;
@@ -156,6 +174,7 @@ const Sidebar = ({ status = 'active', isAdmin = false, user }) => {
     if (user?.role === 'TRAINER') return trainerNav;
     if (user?.role === 'STUDENT') return studentNav;
     if (user?.role === 'CORPORATE') return corporateNav;
+    if (user?.role === 'PLACEMENT_OFFICER') return placementNav;
     return partnerNav;
   };
 
